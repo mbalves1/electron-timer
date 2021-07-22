@@ -3,12 +3,13 @@ const data = require('./data')
 const templateGenerator = require('./template')
 
 let tray = null
+let mainWindow = null
 
 app.on('ready', () => {
   console.log('Aplicação Iniciada')
-  let mainWindow = new BrowserWindow({
-    width: 600,
-    height: 400,
+  mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
 
     webPreferences: {
       nodeIntegration: true,
@@ -17,10 +18,15 @@ app.on('ready', () => {
   });
 
   tray = new Tray(__dirname + '/app/img/icon-tray.png')
-  let template = templateGenerator.geraTrayTEmplate()
+  let template = templateGenerator.geraTrayTEmplate(mainWindow)
   let trayMenu = Menu.buildFromTemplate(template)
-
   tray.setContextMenu(trayMenu)
+
+  let templateMenu = templateGenerator.geraMenuPrincipalTemplate(app)
+  let menuPrincipal = Menu.buildFromTemplate(templateMenu)
+  Menu.setApplicationMenu(menuPrincipal)
+
+  mainWindow.openDevTools()
   mainWindow.loadURL(`file://${__dirname}/app/index.html`)
 });
 
@@ -53,4 +59,10 @@ ipcMain.on('fechar-janela-sobre', () => {
 
 ipcMain.on('curso-parado', (event, curso, tempoEstudado) => {
   data.salvaDados(curso, tempoEstudado)
+})
+
+ipcMain.on('curso-adicionado', (event, novoCurso) => {
+  let novoTemplate = templateGenerator.adicionaCursoNoTray(novoCurso, mainWindow)
+  let novoTrayMenu = Menu.buildFromTemplate(novoTemplate)
+  tray.setContextMenu(novoTrayMenu)
 })

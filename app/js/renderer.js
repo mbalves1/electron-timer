@@ -6,6 +6,8 @@ let linkSobre = document.querySelector('#link-sobre');
 let botaoPlay = document.querySelector('.botao-play')
 let tempo = document.querySelector('.tempo')
 let curso = document.querySelector('.curso')
+let botaoAdicionar = document.querySelector('.botao-adicionar')
+let campoAdicionar = document.querySelector('.campo-adicionar')
 
 window.onload = () => {
     data.pegaDados(curso.textContent)
@@ -27,11 +29,46 @@ botaoPlay.addEventListener('click', function (){
     if (play) {
         timer.parar(curso.textContent)
         play = false
+        new Notification('All-timer', {
+            body: `O timer do Curso ${curso.textContent} foi parado`,
+            icon: 'img/icon.png'
+        })
     } else {
         timer.iniciar(tempo)
         play = true
+        new Notification('All-timer', {
+            body: `O timer do Curso ${curso.textContent} foi iniciado`,
+            icon: 'img/icon.png'
+        })
     }
     
     imgs = imgs.reverse()
     botaoPlay.src = imgs[0]
+})
+
+ipcRenderer.on('curso-trocado', (event, nomeCurso) => {
+    timer.parar(curso.textContent)
+    data.pegaDados(nomeCurso)
+        .then((dados) => {
+            tempo.textContent = dados.tempo
+        })
+        .catch((err) => {
+            console.log('O curso não possuui json');
+            tempo.textContent = '00:00:00'
+        })
+    curso.textContent = nomeCurso
+})
+
+botaoAdicionar.addEventListener('click', () => {
+
+    if (campoAdicionar.value === '') {
+        console.log('Não posso adicionar vazio!');
+        return
+    }
+
+    let novoCurso = campoAdicionar.value
+    curso.textContent = novoCurso
+    tempo.textContent = '00:00:00'
+    campoAdicionar.value = ''
+    ipcRenderer.send('curso-adicionado', novoCurso)
 })
